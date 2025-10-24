@@ -3,8 +3,8 @@ import { E } from '@endo/far';
 import { prepareChainHubAdmin } from '@agoric/orchestration/src/exos/chain-hub-admin.js';
 import { withOrchestration } from '@agoric/orchestration/src/utils/start-helper.js';
 import { registerChainsAndAssets } from '@agoric/orchestration/src/utils/chain-hub-helper.js';
-import * as evmFlows from './evm.flows.js';
-import { prepareEvmAccountKit } from './evm-account-kit.js';
+import * as crossChainFlow from './qstn.flows.js';
+import { prepareAccountKit } from './qstn-account-kit.js';
 import { makeTracer } from '@agoric/internal';
 
 /**
@@ -23,8 +23,8 @@ const trace = makeTracer('AxelarGmp');
  *
  * @param {ZCF} zcf
  * @param {OrchestrationPowers & {
- *   marshaller: Marshaller;
- *   chainInfo: Record<string, CosmosChainInfo>;
+ *   marshaller: Remote<Marshaller>;
+ *   chainInfo?: Record<string, CosmosChainInfo>;
  *   assetInfo?: [Denom, DenomDetail & { brandKey?: string }][];
  *   storageNode: Remote<StorageNode>;
  * }} privateArgs
@@ -39,10 +39,6 @@ export const contract = async (
 ) => {
   trace('Inside Contract');
 
-  trace('Channel Info Agoric:');
-  trace(privateArgs.chainInfo.agoric.connections);
-
-  trace('Registering Chain and Assets....');
   registerChainsAndAssets(
     chainHub,
     zcf.getTerms().brands,
@@ -57,21 +53,61 @@ export const contract = async (
   /** @type {(msg: string) => Vow<void>} */
   const log = (msg) => vowTools.watch(E(logNode).setValue(msg));
 
-  const makeEvmAccountKit = prepareEvmAccountKit(zone.subZone('evmTap'), {
+  const { makeRemoteChannel: makeAxelarRemoteChannel } = orchestrateAll(
+    { makeRemoteChannel: crossChainFlow.makeRemoteChannel },
+    {
+      chainName: 'Axelar',
+      chainHub,
+      log,
+    },
+  );
+
+  const { makeRemoteChannel: makeOsmosisRemoteChannel } = orchestrateAll(
+    { makeRemoteChannel: crossChainFlow.makeRemoteChannel },
+    {
+      chainName: 'Osmosis',
+      chainHub,
+      log,
+    },
+  );
+
+  const { makeRemoteChannel: makeDydxRemoteChannel } = orchestrateAll(
+    { makeRemoteChannel: crossChainFlow.makeRemoteChannel },
+    {
+      chainName: 'Dydx',
+      chainHub,
+      log,
+    },
+  );
+
+  const axelarRemoteChannel = zone.makeOnce('AxelarRemoteChannel', () =>
+    makeAxelarRemoteChannel(),
+  );
+  const osmosisRemoteChannel = zone.makeOnce('OsmosisRemoteChannel', () =>
+    makeOsmosisRemoteChannel(),
+  );
+  const dydxRemoteChannel = zone.makeOnce('DydxRemoteChannel', () =>
+    makeDydxRemoteChannel(),
+  );
+
+  const makeAccountKit = prepareAccountKit(zone.subZone('evmTap'), {
     zcf,
     vowTools,
     log,
     zoeTools,
   });
 
-  const { localTransfer, withdrawToSeat } = zoeTools;
-  const { createAndMonitorLCA } = orchestrateAll(evmFlows, {
-    makeEvmAccountKit,
-    log,
-    chainHub,
-    localTransfer,
-    withdrawToSeat,
-  });
+  const { createAndMonitorLCA } = orchestrateAll(
+    { createAndMonitorLCA: crossChainFlow.createAndMonitorLCA },
+    {
+      makeAccountKit,
+      log,
+      chainHub,
+      axelarRemoteChannel,
+      osmosisRemoteChannel,
+      dydxRemoteChannel,
+    },
+  );
 
   const publicFacet = zone.exo(
     'Send PF',

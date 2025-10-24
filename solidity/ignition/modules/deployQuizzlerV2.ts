@@ -9,7 +9,9 @@ dotenv.config();
 const { GATEWAY_CONTRACT, AGORIC_SENDER, CHAIN_NAME } = process.env;
 
 if (!GATEWAY_CONTRACT || !AGORIC_SENDER || !CHAIN_NAME) {
-  throw new Error('GATEWAY_CONTRACT, AGORIC_SENDER, or CHAIN_NAME is not defined');
+  throw new Error(
+    'GATEWAY_CONTRACT, AGORIC_SENDER, or CHAIN_NAME is not defined',
+  );
 }
 
 console.log(`GATEWAY_CONTRACT: ${GATEWAY_CONTRACT}`);

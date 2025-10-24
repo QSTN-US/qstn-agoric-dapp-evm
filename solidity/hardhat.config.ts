@@ -55,7 +55,7 @@ const config: HardhatUserConfig = {
       gasPrice: 225000000000,
       chainId: 11155111,
       accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
-    }
+    },
   },
   mocha: {
     timeout: 20000,

@@ -32,14 +32,14 @@ export type AxelarGmpOutgoingMemo = {
   fee?: AxelarFeeObject;
 };
 
-export type EvmTapState = {
+export type AccountTapState = {
   localAccount: OrchestrationAccount<{ chainId: 'agoric' }>;
+  localChainId: string;
   localChainAddress: ChainAddress;
-  sourceChannel: IBCChannelID;
-  remoteDenom: Denom;
-  localDenom: Denom;
   assets: any;
-  remoteChainInfo: any;
+  axelarRemoteChannel: RemoteChannelInfo;
+  osmosisRemoteChannel: RemoteChannelInfo;
+  dydxRemoteChannel: RemoteChannelInfo;
 };
 
 export type ContractCall = {

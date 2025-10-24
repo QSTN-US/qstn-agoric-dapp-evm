@@ -1,5 +1,5 @@
 import { makeHelpers } from '@agoric/deploy-script-support';
-import { getManifest, startAxelarGmp } from './start-contract.js';
+import { getManifest, startQstnContract } from './start-contract.js';
 import { assetInfo } from './static-config.js';
 import { getChainConfig } from './get-chain-config.js';
 import { parseArgs } from 'node:util';
@@ -23,9 +23,7 @@ export const defaultProposalBuilder = async (
     getManifestCall: [
       getManifest.name,
       {
-        installationRef: publishRef(
-          install('../dist/axelar-gmp.contract.bundle.js'),
-        ),
+        installationRef: publishRef(install('../dist/qstn.contract.bundle.js')),
         options,
       },
     ],
@@ -57,7 +55,7 @@ export default async (homeP, endowments) => {
 
   const { writeCoreEval } = await makeHelpers(homeP, endowments);
 
-  await writeCoreEval(startAxelarGmp.name, (utils) =>
+  await writeCoreEval(startQstnContract.name, (utils) =>
     defaultProposalBuilder(utils, opts),
   );
 };

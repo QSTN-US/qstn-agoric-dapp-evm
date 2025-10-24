@@ -11,21 +11,21 @@ import { E } from '@endo/far';
  * @import {Issuer} from '@agoric/ertp';
  * @import {Installation, Instance} from '@agoric/zoe/src/zoeService/utils.js';
  * @import {CosmosChainInfo, Denom, DenomDetail} from '@agoric/orchestration';
- * @import {start as StartFn} from 'contract/src/axelar-gmp.contract';
+ * @import {start as StartFn} from 'contract/src/qstn.contract.js';
  */
 
-const trace = makeTracer('start axelarGmp', true);
+const trace = makeTracer('start qstn contract', true);
 
 /**
  * @param {BootstrapPowers & {
  *   installation: {
  *     consume: {
- *       axelarGmp: Installation<StartFn>;
+ *       qstnContract: Installation<StartFn>;
  *     };
  *   };
  *   instance: {
  *     produce: {
- *       axelarGmp: Producer<Instance<StartFn>>
+ *       qstnContract: Producer<Instance<StartFn>>
  *     };
  *   };
  *   issuer: {
@@ -42,7 +42,7 @@ const trace = makeTracer('start axelarGmp', true);
  *   };
  * }} config
  */
-export const startAxelarGmp = async (
+export const startQstnContract = async (
   {
     consume: {
       agoricNames,
@@ -54,10 +54,10 @@ export const startAxelarGmp = async (
       startUpgradable,
     },
     installation: {
-      consume: { axelarGmp },
+      consume: { qstnContract },
     },
     instance: {
-      produce: { axelarGmp: produceInstance },
+      produce: { qstnContract: produceInstance },
     },
     issuer: {
       consume: { BLD, IST },
@@ -65,7 +65,7 @@ export const startAxelarGmp = async (
   },
   { options: { chainInfo, assetInfo } },
 ) => {
-  trace(startAxelarGmp.name);
+  trace(startQstnContract.name);
 
   const marshaller = await E(board).getReadonlyMarshaller();
 
@@ -77,7 +77,9 @@ export const startAxelarGmp = async (
       localchain,
       marshaller,
       orchestrationService: cosmosInterchainService,
-      storageNode: E(NonNullish(await chainStorage)).makeChildNode('axelarGmp'),
+      storageNode: E(NonNullish(await chainStorage)).makeChildNode(
+        'qstnContract',
+      ),
       timerService: chainTimerService,
       chainInfo,
       assetInfo,
@@ -110,20 +112,20 @@ export const startAxelarGmp = async (
 
   trace('Starting contract instance');
   const { instance } = await E(startUpgradable)({
-    label: 'axelarGmp',
-    installation: axelarGmp,
+    label: 'qstnContract',
+    installation: qstnContract,
     issuerKeywordRecord,
     privateArgs,
   });
   produceInstance.resolve(instance);
   trace('done');
 };
-harden(startAxelarGmp);
+harden(startQstnContract);
 
 export const getManifest = ({ restoreRef }, { installationRef, options }) => {
   return {
     manifest: {
-      [startAxelarGmp.name]: {
+      [startQstnContract.name]: {
         consume: {
           agoricNames: true,
           board: true,
@@ -135,10 +137,10 @@ export const getManifest = ({ restoreRef }, { installationRef, options }) => {
           startUpgradable: true,
         },
         installation: {
-          consume: { axelarGmp: true },
+          consume: { qstnContract: true },
         },
         instance: {
-          produce: { axelarGmp: true },
+          produce: { qstnContract: true },
         },
         issuer: {
           consume: { BLD: true, IST: true },
@@ -146,7 +148,7 @@ export const getManifest = ({ restoreRef }, { installationRef, options }) => {
       },
     },
     installations: {
-      axelarGmp: restoreRef(installationRef),
+      qstnContract: restoreRef(installationRef),
     },
     options,
   };
