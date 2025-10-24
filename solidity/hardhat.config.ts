@@ -50,6 +50,12 @@ const config: HardhatUserConfig = {
       chainId: 84532,
       accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
     },
+    eth: {
+      url: 'https://sepolia.infura.io/v3/YOUR_INFURA_PROJECT_ID',
+      gasPrice: 225000000000,
+      chainId: 11155111,
+      accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
+    }
   },
   mocha: {
     timeout: 20000,
